@@ -96,11 +96,11 @@ const getRank = async (req, res) => {
 
 const registerNewEvent = async (req, res) => {
     try{
-        const userId = req.user._id;
+        const userId = req.user.id;
         const eventId = req.params.eventId;
-
-        const user = await Student.findById(userId);
-
+        
+        const user = await Student.findById(userId)
+        
         if(user?.registered_events.includes(eventId) || user?.visited_events.includes(eventId)){
             return res.status(400).json({
                 success: false,
@@ -116,7 +116,8 @@ const registerNewEvent = async (req, res) => {
             });
         }
 
-        await Student.findByIdAndUpdate(userId, {$push: {registered_events: eventId}}, {new: true});
+        await Student.findByIdAndUpdate(userId, {$push: {registered_events: eventId}}, {new: true})
+        
         await Event.findByIdAndUpdate(eventId, {$push: {registered_users: userId}}, {new: true});
 
         // Send Successful Registration Mail

@@ -3,7 +3,8 @@ require("dotenv").config()
 
 exports.auth = async(req,res,next)=>{
     try{
-        const token= req.cookies.token || req.body.token || req.header("Authorization").replace("Bearer ", "");
+        const token= req.cookies.token || req.body.token || req.header("Authorization").replace("Bearer ", "").replace(/"/g, '');
+
         if(!token){
             return res.status(500).json({
                 success: false,
@@ -14,6 +15,7 @@ exports.auth = async(req,res,next)=>{
         try{
             const decode=jwt.verify(token,process.env.JWT_SECRET)
             req.user=decode
+            
         }catch(error){
             return res.status(500).json({
                 success: false,

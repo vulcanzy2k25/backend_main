@@ -29,10 +29,18 @@ const createEvent = async (req, res) => {
         message: "Unable to Uplaod image",
       })
     }
+    const clubName=await Club.findById(clubId);
+    if(!clubName){
+      return res.status(404).json({
+        success: false,
+        message: "Club not found",
+      });
+    }
 
     const newEvent = await Event.create({
       name,
       club: club._id,
+      clubName:clubName.club_name,
       description,
       image: imageResponse?.secure_url,
     });
@@ -56,6 +64,7 @@ const createEvent = async (req, res) => {
 const deleteEvent = async (req, res) => {
   try {
     const { eventId } = req.params;
+    
     if(!eventId){
       return res.status(404).json({
         success: false,
@@ -63,8 +72,7 @@ const deleteEvent = async (req, res) => {
       })
     }
 
-    const deletedEvent = await Event.findOneAndDelete({ eventId });
-
+    const deletedEvent = await Event.findOneAndDelete({ _id:eventId });
     if(!deletedEvent){
       return res.status(404).json({ 
         success: false,
@@ -109,7 +117,7 @@ const getAllEvents = async (_, res) => {
   }
 };
 
-const getEventById = async (_, res) => {
+const getEventById = async (req, res) => {
   try{
     const { eventId } = req.params;
     if(!eventId){
@@ -119,7 +127,7 @@ const getEventById = async (_, res) => {
       })
     }
 
-    const event = await Event.findOne({ eventId });
+    const event = await Event.findOne({ _id:eventId });
 
     if(!event){
       return res.status(404).json({ 

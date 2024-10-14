@@ -10,6 +10,9 @@ const EventSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Club",
   },
+  clubName: {
+    type: String,
+  },
   image: {
     type: String,
   },
