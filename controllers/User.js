@@ -58,7 +58,6 @@ const visitedEvents = async (req, res) => {
         const visitedEvents = user?.visited_events;
         
         const events = await Event.find({_id: {$in: visitedEvents}});
-        console.log(events);
 
         return res.status(200).json({
             success: true,
