@@ -1,6 +1,5 @@
 const Student = require("../models/StudentModel");
 const Event = require('../models/EventModel');
-const {MailSender} = require('../utilities');
 
 const editUser = async (req, res) => {
     try{
@@ -29,9 +28,10 @@ const editUser = async (req, res) => {
 
 const registeredEvents = async(req, res) => {
     try{
-        const userId = req.user._id;
+        const userId = req.user.id;
 
         const user = await Student.findById(userId);
+
         const registeredEvents = user?.registered_events;
 
         const events = await Event.find({_id: {$in: registeredEvents}});
@@ -52,12 +52,13 @@ const registeredEvents = async(req, res) => {
 
 const visitedEvents = async (req, res) => {
     try{
-        const userId = req.user._id;
+        const userId = req.user.id;
 
         const user = await Student.findById(userId);
         const visitedEvents = user?.visited_events;
-
+        
         const events = await Event.find({_id: {$in: visitedEvents}});
+        console.log(events);
 
         return res.status(200).json({
             success: true,
@@ -75,15 +76,17 @@ const visitedEvents = async (req, res) => {
 
 const getRank = async (req, res) => {
     try{
-        const userId = req.user._id;
+        const userId = req.user.id;
 
-        const users = await Student.find().sort({coins: -1});
-        const rank = users.findIndex(user => user.user_id === userId) + 1;
+        // const users = await Student.find().sort({coins: -1});
+        const user= await Student.findById(userId)
+        const coins = user.coins;
+        // const rank = users.findIndex(user => user.user_id === userId) + 1;
 
         return res.status(200).json({
             success: true,
             message: "Fetched User Rank",
-            data: rank,
+            data: coins,
         })
     }catch(error){
         console.log(error);
