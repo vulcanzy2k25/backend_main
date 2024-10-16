@@ -4,10 +4,10 @@ const {UploadMedia} = require('../utilities');
 
 const createEvent = async (req, res) => {
   try{
-    const {name,clubId,description} = req.body;
+    const {name,clubId,description,eventId} = req.body;
     const {image} = req.files;
 
-    if(!name || !clubId || !description || !image){
+    if(!name || !clubId || !description || !image || !eventId){
         return res.status(404).json({
             success: false,
             message: "Data is Missing",
@@ -42,6 +42,7 @@ const createEvent = async (req, res) => {
       club: club._id,
       clubName:clubName.club_name,
       description,
+      eventId,
       image: imageResponse?.secure_url,
     });
 
