@@ -29,7 +29,7 @@ const StudentSchema = new mongoose.Schema({
     type: String,
     required: [true, "Registration number is required"],
     unique: true,
-    match: [/^\d+$/, "Only digits are allowed"],
+    match: [/^[A-Za-z0-9]+$/, "Only alphanumeric characters (A-Z, 0-9) are allowed"],
   },
   token:{
     type : String,

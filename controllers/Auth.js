@@ -76,8 +76,9 @@ exports.signUp = async(req,res)=>{
                 message:"all details required"
             })
         }
-
+        
         const userExists = await Student.findOne({email});
+
         if(userExists){
             return res.status(400).json({
                 success:false,
@@ -86,7 +87,7 @@ exports.signUp = async(req,res)=>{
         }
     
         let recentOTP = await OTP.find({email}).sort({createdAt:-1}).limit(1);
-        recentOTP = recentOTP[0].otp;
+        recentOTP = recentOTP[0].otp;        
 
         if(recentOTP.length !== 6){
             return res.status(401).json({
