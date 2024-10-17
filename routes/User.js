@@ -9,5 +9,6 @@ router.get("/registeredEvents", authMiddlewares.auth, userController.registeredE
 router.get("/visitedEvents", authMiddlewares.auth, userController.visitedEvents);
 router.get("/fetchRank", authMiddlewares.auth, userController.getRank);
 router.post("/register/:eventId", authMiddlewares.auth, userController.registerNewEvent);
+router.post("/visited/:eventId", authMiddlewares.auth, userController.visitNewEvent);
 
 module.exports = router;
