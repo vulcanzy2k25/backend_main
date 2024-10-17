@@ -177,9 +177,13 @@ const visitNewEvent = async (req, res) => {
 
     await Student.findByIdAndUpdate(
       userId,
-      { $push: { visited_events: event._id } },
+      { 
+        $push: { visited_events: event._id },
+        $inc: { coins: 20 } 
+      },
       { new: true }
     );
+    
 
     // await Student.findByIdAndUpdate(userId, {$push: {visited_events: eventId}}, {new: true})
 
