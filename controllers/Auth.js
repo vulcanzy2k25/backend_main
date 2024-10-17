@@ -12,10 +12,8 @@ require("dotenv").config();
 exports.sendOTP = async(req,res)=>{
     try{
         const {email} = req.body;
-        console.log(email);
         
         const studentExists = await Student.findOne({email});
-        console.log(studentExists);
         
         if(studentExists){
             return res.status(401).json({
@@ -31,7 +29,6 @@ exports.sendOTP = async(req,res)=>{
         })
 
         let result=await OTP.findOne({otp:otp});
-        console.log(result);
         
         while(result){
             otp=otpGenerator.generate(6,{
