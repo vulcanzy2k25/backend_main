@@ -10,68 +10,66 @@ const crypto = require("crypto");
 require("dotenv").config();
 
 exports.sendOTP = async (req, res) => {
-    try {
-      const { email } = req.body;  
-      // Check if student already exists
-      const studentExists = await Student.findOne({ email });
-      if (studentExists) {
-        return res.status(401).json({
-          success: false,
-          message: "Student already exists",
-        });
-      }
-  
-      // Generate a unique OTP
-      let otp;
-      let isUnique = false;
-      while (!isUnique) {
-        otp = otpGenerator.generate(6, {
-          upperCaseAlphabets: false,
-          lowerCaseAlphabets: false,
-          specialChars: false,
-          digits: true,
-        });
-  
-        const existingOTP = await OTP.findOne({ otp });
-        if (!existingOTP) {
-          isUnique = true; // Ensure OTP is unique before proceeding
-        }
-      }
-  
-      // Create OTP in the database
-      const otpPayload = { email, otp };
-      await OTP.create(otpPayload);
-  
-      // Send email with OTP
-      try {
-        await MailSender(
-          email,
-          "Verification OTP | TechKriya'24",
-          otpTemplate(otp)
-        );
-      } catch (error) {
-        console.error("Error sending verification email:", error);
-        return res.status(500).json({
-          success: false,
-          message: "Error sending verification email",
-        });
-      }
-  
-      // Success response
-      return res.status(200).json({
-        success: true,
-        message: "OTP sent successfully",
-      });
-  
-    } catch (err) {
-      console.error("Error in sending OTP:", err);
-      return res.status(500).json({
+  try {
+    const { email } = req.body;
+    // Check if student already exists
+    const studentExists = await Student.findOne({ email });
+    if (studentExists) {
+      return res.status(401).json({
         success: false,
-        message: "Error in sending OTP",
+        message: "Student already exists",
       });
     }
-  };
-  
+
+    // Generate a unique OTP
+    let otp;
+    let isUnique = false;
+    while (!isUnique) {
+      otp = otpGenerator.generate(6, {
+        upperCaseAlphabets: false,
+        lowerCaseAlphabets: false,
+        specialChars: false,
+        digits: true,
+      });
+
+      const existingOTP = await OTP.findOne({ otp });
+      if (!existingOTP) {
+        isUnique = true; // Ensure OTP is unique before proceeding
+      }
+    }
+
+    // Create OTP in the database
+    const otpPayload = { email, otp };
+    await OTP.create(otpPayload);
+
+    // Send email with OTP
+    try {
+      await MailSender(
+        email,
+        "Verification OTP | TechKriya'24",
+        otpTemplate(otp)
+      );
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error sending verification email",
+      });
+    }
+
+    // Success response
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully",
+    });
+  } catch (err) {
+    console.error("Error in sending OTP:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Error in sending OTP",
+    });
+  }
+};
 
 // exports.sendOTP = async (req, res) => {
 //   try {
@@ -119,9 +117,9 @@ exports.sendOTP = async (req, res) => {
 //                   message: "Error Sending Verification Email",
 //                 });
 //               }
-          
+
 //         }
-//     );    
+//     );
 //     return res.status(200).json({
 //       success: true,
 //       message: "OTP Sent successfully",
@@ -137,7 +135,7 @@ exports.sendOTP = async (req, res) => {
 
 exports.signUp = async (req, res) => {
   try {
-    const { name, email, password, year, college, reg_no, outsider, otp } =
+    let { name, email, password, year, college, reg_no, outsider, otp } =
       req.body;
     if (
       !name ||
@@ -162,6 +160,13 @@ exports.signUp = async (req, res) => {
         message: "User already exists",
       });
     }
+    let recentMail = await OTP.find({ email });
+    if (!recentMail) {
+      return res.status(401).json({
+        success: false,
+        message: "Email not found",
+      });
+    }
     let recentOTP = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
     recentOTP = recentOTP[0].otp;
     if (recentOTP.length !== 6) {
@@ -179,7 +184,9 @@ exports.signUp = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    if (reg_no !== null && reg_no !== undefined) {
+      reg_no = reg_no.toString().trim();
+    }
     await Student.create({
       name,
       email,
