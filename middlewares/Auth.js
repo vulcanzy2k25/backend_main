@@ -32,5 +32,10 @@ exports.auth = async(req,res,next)=>{
 			error: error.message,
 		});
     }
-
 }
+
+exports.ensureAuth = (req, res, next) => {
+    if (req.isAuthenticated()) return next();
+    res.redirect("/auth/google");
+  };
+    

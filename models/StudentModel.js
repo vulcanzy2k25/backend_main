@@ -12,9 +12,13 @@ const StudentSchema = new mongoose.Schema({
     unique: true,
     match: [/\S+@\S+\.\S+/, "Please use a valid email address"],
   },
-  password: {
+  googleId: {
     type: String,
-    required: [true, "Password is required"],
+    unique: true,
+    required: [true, "Google ID is required"],
+  },
+  avatar: {
+    type: String, // URL of the avatar (Google profile picture)
   },
   year: {
     type: Number,
@@ -31,8 +35,8 @@ const StudentSchema = new mongoose.Schema({
     unique: true,
     match: [/^[A-Za-z0-9]+$/, "Only alphanumeric characters (A-Z, 0-9) are allowed"],
   },
-  token:{
-    type : String,
+  token: {
+    type: String, // Optional field to store JWT or session token
   },
   coins: {
     type: Number,
