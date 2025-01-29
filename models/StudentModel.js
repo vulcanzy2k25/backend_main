@@ -22,21 +22,15 @@ const StudentSchema = new mongoose.Schema({
   },
   year: {
     type: Number,
-    required: true,
   },
   college: {
     type: String,
-    required: [true, "College is required"],
-    trim: true,
+    // required: [true, "College is required"],
   },
   reg_no: {
     type: String,
-    required: [true, "Registration number is required"],
     unique: true,
     match: [/^[A-Za-z0-9]+$/, "Only alphanumeric characters (A-Z, 0-9) are allowed"],
-  },
-  token: {
-    type: String, // Optional field to store JWT or session token
   },
   coins: {
     type: Number,
