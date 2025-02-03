@@ -10,11 +10,6 @@ const EventSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Club",
   },
-  eventId:{
-    type: String,
-    required: [true, "Event ID is required"],
-    unique: true,
-  },
   clubName: {
     type: String,
   },
@@ -35,13 +30,14 @@ const EventSchema = new mongoose.Schema({
       default: [],
     },
   ],
-  visited_users: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Student",
-      default: [],
-    },
-  ],
+  date: {
+    type: String,
+    required: true,
+  },
+  location:{
+    type:String,
+    required:true
+  }
 });
 
 module.exports = mongoose.model("Event", EventSchema);

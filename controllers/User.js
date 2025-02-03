@@ -1,34 +1,69 @@
 const Student = require("../models/StudentModel");
 const Event = require("../models/EventModel");
 
-const editUser = async (req, res) => {
+const getUser=async(req,res)=>{
   try {
-    const userId = req.user._id;
-    const { name, email, password, year, college } = req.body;
-
-    await Student.findByIdAndUpdate(
-      userId,
-      {
-        name,
-        email,
-        password,
-        year,
-        college,
-      },
-      { new: true }
-    );
-
+    const userId=req.user.id
+    
+    const student= await Student.findById({_id:userId})
+    if(!student){
+     return res.status(404).json({
+        status:false,
+        message:'User not found'
+      })
+    }    
     return res.status(200).json({
-      success: true,
-      message: "User updated successfully",
-    });
+      status:true,
+      message:student
+    })
   } catch (error) {
     return res.status(500).json({
-      success: false,
-      message: "Error updating user",
+      status:false,
+      message:'Error fetching user'
+    })
+  }
+}
+
+const editUser = async (req, res) => {
+  try {
+    const userId = req.user.id; // Get user ID from authentication middleware
+    const { college, reg_no, year } = req.body;
+
+    // Validate inputs
+    if (!college && !reg_no && !year) {
+      return res.status(400).json({
+        status: false,
+        message: "At least one field is required to update.",
+      });
+    }
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+      userId,
+      { $set: { college, reg_no, year } },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedStudent) {
+      return res.status(404).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Profile updated successfully",
+      user: updatedStudent,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: false,
+      message: "Server error while updating profile",
     });
   }
 };
+
 
 const registeredEvents = async (req, res) => {
   try {
@@ -107,10 +142,7 @@ const registerNewEvent = async (req, res) => {
 
     const user = await Student.findById(userId);
 
-    if (
-      user?.registered_events.includes(eventId) ||
-      user?.visited_events.includes(eventId)
-    ) {
+    if (user?.registered_events.includes(eventId)) {
       return res.status(400).json({
         success: false,
         message: "User has already registered or visited this event",
@@ -154,7 +186,7 @@ const registerNewEvent = async (req, res) => {
 const visitNewEvent = async (req, res) => {
   try {
     const userId = req.user.id;
-    const eventId = req.params.eventId;    
+    const eventId = req.params.eventId;
     const user = await Student.findById(userId);
     const event = await Event.findOne({ eventId: eventId });
     if (!event) {
@@ -162,7 +194,7 @@ const visitNewEvent = async (req, res) => {
         message: "Event not found",
       });
     }
-    if (user?.visited_events.includes(event._id)) {        
+    if (user?.visited_events.includes(event._id)) {
       return res.status(400).json({
         success: false,
         message: "User has visited this event",
@@ -177,13 +209,12 @@ const visitNewEvent = async (req, res) => {
 
     await Student.findByIdAndUpdate(
       userId,
-      { 
+      {
         $push: { visited_events: event._id },
-        $inc: { coins: 20 } 
+        $inc: { coins: 20 },
       },
       { new: true }
     );
-    
 
     // await Student.findByIdAndUpdate(userId, {$push: {visited_events: eventId}}, {new: true})
 
@@ -192,7 +223,6 @@ const visitNewEvent = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Successfully visited for the event",
-
     });
   } catch (error) {
     console.log(error);
@@ -210,4 +240,5 @@ module.exports = {
   getRank,
   registerNewEvent,
   visitNewEvent,
+  getUser
 };

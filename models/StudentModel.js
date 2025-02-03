@@ -44,13 +44,8 @@ const StudentSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
     },
-  ],
-  visited_events: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Event",
-    },
-  ],
+  ]
+  
 });
 
 module.exports = mongoose.model("Student", StudentSchema);

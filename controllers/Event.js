@@ -1,159 +1,258 @@
-const Event = require('../models/EventModel');
-const Club = require('../models/ClubModel');
-const {UploadMedia} = require('../utilities');
+const Event = require("./../models/EventModel");
+const Club = require("./../models/ClubModel");
+const { UploadMedia } = require("../utilities");
 
 const createEvent = async (req, res) => {
-  try{
-    const {name,clubId,description,eventId} = req.body;
-    const {image} = req.files;
+  try {
+    const { name, description, date, location } = req.body;
+    const { image } = req.files;
+    const clubId = req.club._id;
 
-    if(!name || !clubId || !description || !image || !eventId){
-        return res.status(404).json({
-            success: false,
-            message: "Data is Missing",
-        })
-    }
-
-    const club = await Club.findById(clubId);
-    if(!club){
-      return res.status(404).json({
+    if (!name || !description || !date || !location || !image || !clubId) {
+      return res.status(400).json({
         success: false,
-        message: "Club not found",
+        message: "Missing required fields.",
       });
     }
 
-    const imageResponse = await UploadMedia(image,"TechKriya'24");
-    if(!imageResponse){
-      return res.status(402).json({
-        success: false,
-        message: "Unable to Uplaod image",
-      })
-    }
-    const clubName=await Club.findById(clubId);
-    if(!clubName){
+    const club = await Club.findById(clubId);
+    if (!club) {
       return res.status(404).json({
         success: false,
-        message: "Club not found",
+        message: "Club not found.",
+      });
+    }
+
+    const imageResponse = await UploadMedia(image, "Vulcanzy'25");
+    if (!imageResponse) {
+      return res.status(400).json({
+        success: false,
+        message: "Image upload failed.",
       });
     }
 
     const newEvent = await Event.create({
       name,
       club: club._id,
-      clubName:clubName.club_name,
+      clubName: club.clubName,
       description,
-      eventId,
-      image: imageResponse?.secure_url,
+      image: imageResponse.secure_url,
+      date,
+      location,
     });
 
-    club.events.push(newEvent._id);
-    await club.save();
+    // ✅ Use findByIdAndUpdate to push the event into the club's events array
+    await Club.findByIdAndUpdate(
+      clubId,
+      { $push: { events: newEvent._id } },
+      { new: true }
+    );
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
-      message: "Event successfully created",
+      message: "Event successfully created.",
+      event: newEvent,
     });
-  }catch(error){
-    console.log(error);
-    return res.status(400).json({
-        success: false, 
-        message: "Unable to Create Event",
-    });
+  } catch (err) {
+    console.error("Error creating event:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Unable to create event." });
+  }
+};
+
+
+// const createEvent = async (req, res) => {
+//   try {
+//     const { name, description, date, location } = req.body;
+//     const { image } = req.files;
+//     const clubId = req.club._id;
+
+//     if (!name || !description || !date || !location || !image || !clubId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Missing required fields.",
+//       });
+//     }
+
+//     const club = await Club.findById(clubId);
+//     if (!club) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Club not found.",
+//       });
+//     }
+
+//     const imageResponse = await UploadMedia(image, "Vulcanzy'25");
+//     if (!imageResponse) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Image upload failed.",
+//       });
+//     }
+
+//     const newEvent = await Event.create({
+//       name,
+//       club: club._id,
+//       clubName: club.clubName,
+//       description,
+//       image: imageResponse.secure_url,
+//       date,
+//       location,
+//     });
+
+//     club.events.push(newEvent._id);
+    
+//     await club.save();
+//     return res.status(200).json({
+//       success: true,
+//       message: "Event successfully created.",
+//     });
+//   } catch (err) {
+//     console.error("Error creating event:", err);
+//     return res
+//       .status(500)
+//       .json({ success: false, message: "Unable to create event." });
+//   }
+// };
+
+const updateEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { name, description, date, location } = req.body;
+    const loggedInClubId = req.club._id;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Event not found." });
+    }
+
+    if (loggedInClubId !== event.club.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized." });
+    }
+
+    if (req.files && req.files.image) {
+      const imageResponse = await UploadMedia(req.files.image, "Vulcanzy '25");
+      if (imageResponse) event.image = imageResponse.secure_url;
+    }
+    if (name) event.name = name;
+    if (description) event.description = description;
+    if (date) event.date = date;
+    if (location) event.location = location;
+
+    await event.save();
+    return res
+      .status(200)
+      .json({ success: true, message: "Event updated.", data: event });
+  } catch (error) {
+    console.error("Error updating event:", error);
+    return res.status(500).json({ success: false, message: "Update failed." });
   }
 };
 
 const deleteEvent = async (req, res) => {
   try {
     const { eventId } = req.params;
-    
-    if(!eventId){
-      return res.status(404).json({
-        success: false,
-        message: "Event ID is missing",
-      })
+    const loggedInClubId = req.club._id;
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Event not found." });
     }
 
-    const deletedEvent = await Event.findOneAndDelete({ _id:eventId });
-    if(!deletedEvent){
-      return res.status(404).json({ 
-        success: false,
-        message: "Event not found" 
-      });
+    if (event.club.toString() !== loggedInClubId) {
+      return res.status(403).json({ success: false, message: "Unauthorized." });
     }
 
-    return res.status(200).json({ 
-      success: true,
-      message: "Event successfully deleted", 
-    })
-  }catch(error){
-    console.log(error);
-    return res.status(500).json({ 
-      success: false,
-      message: "Unable to Delete Event",
-    });
+    await Event.findByIdAndDelete(eventId);
+    return res.status(200).json({ success: true, message: "Event deleted." });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Deletion failed." });
   }
 };
 
 const getAllEvents = async (_, res) => {
-  try{
+  try {
     const events = await Event.find({});
-    if(!events){
-      return res.status(404).json({
-        success: false,
-        message: "Unable to Fetch Events",
-      })
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Fetched All Events",
-      data: events,
-    })
-  }catch(error){
-    console.log(error);
-    return res.status(500).json({ 
-      success: false,
-      message: "Unable to Fetch events",
-    });
+    return res
+      .status(200)
+      .json({ success: true, message: "Events fetched.", data: events });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Fetch failed." });
   }
 };
 
 const getEventById = async (req, res) => {
-  try{
+  try {
     const { eventId } = req.params;
-    if(!eventId){
-      return res.status(404).json({
-        success: false,
-        message: "Event Id not found",
-      })
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Event not found." });
     }
-
-    const event = await Event.findOne({ _id:eventId });
-
-    if(!event){
-      return res.status(404).json({ 
-        success: false,
-        message: "Event not found"
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Fetched Event Successfully",
-      data: event,
-    })
-  }catch(error){
-    console.log(error);
-    return res.status(500).json({ 
-      success: false,
-      message: "Unable to Fetch Event",
-    });
+    return res
+      .status(200)
+      .json({ success: true, message: "Event fetched.", data: event });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Fetch failed." });
   }
 };
 
+const getTodayEvents = async (req, res) => {
+  try {
+    const today = new Date();
+    const formattedDate = `${String(today.getDate()).padStart(2, "0")}-${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}-${today.getFullYear()}`;
+
+    const events = await Event.find({ date: formattedDate });
+    if (!events.length) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No events today." });
+    }
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Today's events fetched.",
+        data: events,
+      });
+  } catch (error) {
+    console.error("Error fetching today's events:", error);
+    return res.status(500).json({ success: false, message: "Fetch failed." });
+  }
+};
+
+
+const getClubEvents=async(req,res)=>{
+  try{
+  const loggedInClubId = req.club._id;
+
+  const events=await Event.find({club:loggedInClubId})
+  return res.status(200).json({ success: true,data:events  });
+} catch (err) {
+  console.error(err);
+  return res
+    .status(500)
+    .json({ success: false });
+}}
+
 module.exports = {
   createEvent,
+  updateEvent,
   deleteEvent,
   getAllEvents,
   getEventById,
+  getTodayEvents,
+  getClubEvents
 };
