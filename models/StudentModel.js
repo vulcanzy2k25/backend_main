@@ -29,7 +29,6 @@ const StudentSchema = new mongoose.Schema({
   },
   reg_no: {
     type: String,
-    unique: true,
     match: [/^[A-Za-z0-9]+$/, "Only alphanumeric characters (A-Z, 0-9) are allowed"],
   },
   coins: {
