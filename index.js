@@ -23,14 +23,14 @@ const PORT = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin:"*",
-    methods:"GET,POST,PUT,DELETE",
-    credentials:true
+    origin: ["https://www.vulcanzy.com", "https://vulcanzy2025.vercel.app", "http://localhost:3000"], // Specify the allowed origins
+    methods: "GET,POST,PUT,DELETE",
+    credentials: true
 }));
 app.use(
     fileUpload({
         useTempFiles:true,
-        tempFileDir:"/temp"
+        tempFileDir:"/tmp/"
     })
 )
 
