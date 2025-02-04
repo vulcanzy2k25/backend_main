@@ -9,5 +9,6 @@ router.get("/getAllEvents", eventController.getAllEvents)
 router.get("/getTodayEvents", eventController.getTodayEvents)
 router.get('/getEvent/:eventId', eventController.getEventById);
 router.get('/getClubEvents',authMiddlewares.auth,eventController.getClubEvents)
+router.get('/regUsers/:eventId',authMiddlewares.auth,eventController.registeredUsers)
 
 module.exports = router;

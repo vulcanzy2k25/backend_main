@@ -6,7 +6,7 @@ const createEvent = async (req, res) => {
   try {
     const { name, description, date, location } = req.body;
     const { image } = req.files;
-    const clubId = req.club._id;
+    const clubId = req.user._id;
 
     if (!name || !description || !date || !location || !image || !clubId) {
       return res.status(400).json({
@@ -120,7 +120,7 @@ const updateEvent = async (req, res) => {
   try {
     const { eventId } = req.params;
     const { name, description, date, location } = req.body;
-    const loggedInClubId = req.club._id;
+    const loggedInClubId = req.user._id;
 
     const event = await Event.findById(eventId);
     if (!event) {
@@ -155,27 +155,32 @@ const updateEvent = async (req, res) => {
 const deleteEvent = async (req, res) => {
   try {
     const { eventId } = req.params;
-    const loggedInClubId = req.club._id;
+    
+    const loggedInClubId = req.user._id;
     const event = await Event.findById(eventId);
+
     if (!event) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Event not found." });
+      return res.status(404).json({ success: false, message: "Event not found." });
     }
 
     if (event.club.toString() !== loggedInClubId) {
       return res.status(403).json({ success: false, message: "Unauthorized." });
     }
 
+    // Remove event ID from club's events array
+    await Club.findByIdAndUpdate(loggedInClubId, {
+      $pull: { events: eventId },
+    });
+
     await Event.findByIdAndDelete(eventId);
+    
     return res.status(200).json({ success: true, message: "Event deleted." });
   } catch (err) {
     console.error(err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Deletion failed." });
+    return res.status(500).json({ success: false, message: "Deletion failed." });
   }
 };
+
 
 const getAllEvents = async (_, res) => {
   try {
@@ -236,7 +241,8 @@ const getTodayEvents = async (req, res) => {
 
 const getClubEvents=async(req,res)=>{
   try{
-  const loggedInClubId = req.club._id;
+    
+  const loggedInClubId = req.user._id;
 
   const events=await Event.find({club:loggedInClubId})
   return res.status(200).json({ success: true,data:events  });
@@ -247,6 +253,24 @@ const getClubEvents=async(req,res)=>{
     .json({ success: false });
 }}
 
+const registeredUsers=async(req,res)=>{
+  try {
+    const { eventId } = req.params;
+
+    // Find the event and populate registered users
+    const event = await Event.findById(eventId).populate("registered_users", "name email college year reg_no");
+
+    if (!event) {
+      return res.status(404).json({ success: false, message: "Event not found." });
+    }
+
+    return res.status(200).json({ success: true, users: event.registered_users });
+  } catch (err) {
+    console.error("Error fetching registered users:", err);
+    return res.status(500).json({ success: false, message: "Internal server error." });
+  }
+}
+
 module.exports = {
   createEvent,
   updateEvent,
@@ -254,5 +278,6 @@ module.exports = {
   getAllEvents,
   getEventById,
   getTodayEvents,
-  getClubEvents
+  getClubEvents,
+  registeredUsers
 };

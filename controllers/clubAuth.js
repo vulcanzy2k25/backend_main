@@ -49,7 +49,7 @@ exports.signinClub = async (req, res) => {
             //   secure: process.env.NODE_ENV === "production",
             sameSite: "Lax",
           })
-          .json({ message: "Cookie provided", token });
+          .json({ message: "Cookie provided", token,name:clubName });
       } else {
         return res.status(500).send("Invalid credentials");
       }
