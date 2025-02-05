@@ -23,7 +23,7 @@ const PORT = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: ["https://www.vulcanzy.com", "https://vulcanzy2025.vercel.app", "http://localhost:3000"], // Specify the allowed origins
+    origin: ["https://www.vulcanzy.com", "https://vulcanzy2025.vercel.app", "https://vulcanzy-clubs.vercel.app/"], // Specify the allowed origins
     methods: "GET,POST,PUT,DELETE",
     credentials: true
 }));
